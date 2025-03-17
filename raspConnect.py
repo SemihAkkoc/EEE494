@@ -151,7 +151,6 @@ def start_listener():
                     narrow_h.join()
                     narrow_v.join()
                     
-
                 else:  # Wide angle motor
                     rotate_motor(initial_angle, desired_angle, wide_angle_step_pin, wide_angle_dir_pin, t)
 
