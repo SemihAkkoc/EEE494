@@ -1,6 +1,7 @@
 import cv2
 import socket
 import struct
+import pickle
 import threading
 import numpy as np
 from time import time
@@ -38,7 +39,7 @@ SCAN_PERIOD = 3  # The period of the scan in seconds
 
 
 class RaspberryConnection:
-    def __init__(self, host : str, ports : int):
+    def __init__(self, host : str, ports : tuple):
         self.server_address_camera = (host, ports[0])
         self.client_socket_camera = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket_camera.connect(self.server_address_camera)
@@ -103,7 +104,11 @@ class RaspberryConnection:
         description: this function will turn the motors to the desired 
         angle in given duration t using ethernet with RP wait until the motor is turned
         """
-        pass
+        # we will send a message to the raspberry pi to turn the motor to the desired angle
+        # use pickle to 
+        message = pickle.dumps((initial_angles, desired_angles, t))
+        self.client_socket_motor.sendall(message)
+
 
     def motorControlWide(self, initial_angle : float, desired_angle : float, t : float):
         """
@@ -119,10 +124,10 @@ class RaspberryConnection:
         description: this function will turn the motor to the desired 
         angle in given duration t using ethernet with RP wait until the motor is turned
         """
-        pass
+        message = pickle.dumps((initial_angle, desired_angle, t))
+        self.client_socket_motor.sendall(message)
 
     
-
     def close(self):
         self.client_socket_camera.close()
         self.client_socket_motor.close()
@@ -330,32 +335,6 @@ def convertPolarNarrow(detected_drones, motor_angles):
 
     return detected_drones_polar
 
-
-def resetMotors():
-    """
-    :param 
-    None
-    
-    :return 
-    None
-
-    description: this function will reset the motors to the initial position
-    """
-    pass
-
-
-def isButtonPressed(pin : int):
-    """
-    :param 
-    pin: the pin number of the button
-    
-    :return 
-    True if the button is pressed
-
-    description: this function will check if the button is pressed
-    """
-    pass
-
 def initialize_model():
     """
     Initializes and loads the trained YOLO model.
@@ -393,6 +372,31 @@ def LEDScreenShow(droneCandidateList):
     """
     pass
 
+def resetMotors():
+    """
+    :param 
+    None
+    
+    :return 
+    None
+
+    description: this function will reset the motors to the initial position
+    """
+    pass
+
+
+def isButtonPressed(pin : int):
+    """
+    :param 
+    pin: the pin number of the button
+    
+    :return 
+    True if the button is pressed
+
+    description: this function will check if the button is pressed
+    """
+    pass
+
 def dataAssociation(raw_candidates, t):
     """Updates tracked drones with new detections, keeping unique IDs for tracking."""
     global droneCandidateList  # Use global counter for unique IDs
@@ -426,9 +430,10 @@ def dataAssociation(raw_candidates, t):
             droneCandidateList.append(new_drone)
 
     # Identify stale drones (if they haven't been updated for max_lost_time)
-    expired_drones = [drone for drone in droneCandidateList if (t - drone.t) >= DroneCandidate.MAX_LOST_TIME]
+    # expired_drones = [drone for drone in droneCandidateList if (t - drone.t) >= DroneCandidate.MAX_LOST_TIME]
     # Remove stale drones from the tracking list
     droneCandidateList[:] = [drone for drone in droneCandidateList if (t - drone.t) < DroneCandidate.MAX_LOST_TIME]
+    undeterminedDroneCandidateList[:] = [drone for drone in undeterminedDroneCandidateList if (t - drone.t) < DroneCandidate.MAX_LOST_TIME]
     # Append the dronce candidates that have .isDrone flag None into the undeterminedDroneCandidateList but also check that this object is not previously appended
     for drone in droneCandidateList:
         if drone.isDrone == None and drone not in undeterminedDroneCandidateList:
@@ -436,6 +441,6 @@ def dataAssociation(raw_candidates, t):
                 undeterminedDroneCandidateList.append(drone)
 
     # Explicitly delete expired drone objects
-    with Lock:
-        for drone in expired_drones:
-            del drone
+    # with Lock:
+    #     for drone in expired_drones:
+    #         del drone
