@@ -15,7 +15,6 @@ MOTOR_PORT = 3131
 wide_angle_step_pin = 17  # Wide angle step pin
 wide_angle_dir_pin = 22   # Wide angle direction pin
 
-
 # Narrow angle camera horizontal motor pins
 narrow_angle_Hstep_pin = 18  # Narrow angle horizontal step pin
 narrow_angle_Hdir_pin = 23   # Narrow angle horizontal direction pin
